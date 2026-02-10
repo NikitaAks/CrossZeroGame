@@ -6,7 +6,7 @@ import asyncio
 # Логирование поможет увидеть ошибки в консоли, если они повяятся
 logging.basicConfig(level=logging.INFO)
 
-BOT_TOKEN = '8550093450:AAG0r5UmVBQwgcAULZRAz9nExTeJBBui73k' 
+BOT_TOKEN = '###' 
 #Ссылка
 MINI_APP_URL = 'https://nikitaaks.github.io/CrossZeroGame/'
 
@@ -54,3 +54,4 @@ if __name__ == '__main__':
     except (KeyboardInterrupt, SystemExit):
 
         logging.info("Бот остановлен")
+
