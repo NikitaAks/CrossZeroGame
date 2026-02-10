@@ -6,11 +6,9 @@ import asyncio
 # Логирование поможет увидеть ошибки в консоли, если они повяятся
 logging.basicConfig(level=logging.INFO)
 
-# Твой токен (не меняем)
 BOT_TOKEN = '8550093450:AAG0r5UmVBQwgcAULZRAz9nExTeJBBui73k' 
-
-# ТВОЯ ССЫЛКА (без index.html на конце)
-MINI_APP_URL = 'https://02736e37db6073cd-89-109-46-252.serveousercontent.com'
+#Ссылка
+MINI_APP_URL = 'https://nikitaaks.github.io/CrossZeroGame/'
 
 async def start_command(message: types.Message):
     # Используем переменную MINI_APP_URL, чтобы менять адрес только в одном месте
@@ -54,4 +52,5 @@ if __name__ == '__main__':
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
+
         logging.info("Бот остановлен")
