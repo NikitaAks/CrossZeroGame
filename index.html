@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <script src="https://02736e37db6073cd-89-109-46-252.serveousercontent.com/"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--tg-theme-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #333);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: var(--tg-theme-secondary-bg-color, #fff);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 320px;
+            width: 95%;
+        }
+        h1 {
+            color: var(--tg-theme-link-color, #0088cc);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 90px);
+            grid-template-rows: repeat(3, 90px);
+            width: 276px; /* 3*90 + borders */
+            height: 276px;
+            border: 3px solid var(--tg-theme-button-color, #0088cc);
+            margin: 20px auto;
+            position: relative;
+            background-color: var(--tg-theme-hint-color, #ccc);
+            gap: 1px;
+            padding: 1px;
+        }
+
+        .winning-line {
+            position: absolute;
+            background-color: #ff4757;
+            height: 5px;
+            z-index: 10;
+            display: none;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+
+        /* Specific line positions for 274px board (1px pad + 90px cell + 1px gap...) */
+        .row-1 { top: 46px; left: 12px; width: 250px; transform: translateY(-50%); }
+        .row-2 { top: 137px; left: 12px; width: 250px; transform: translateY(-50%); }
+        .row-3 { top: 228px; left: 12px; width: 250px; transform: translateY(-50%); }
+
+        .col-1 { top: 12px; left: 46px; height: 250px; width: 5px; transform: translateX(-50%); }
+        .col-2 { top: 12px; left: 137px; height: 250px; width: 5px; transform: translateX(-50%); }
+        .col-3 { top: 12px; left: 228px; height: 250px; width: 5px; transform: translateX(-50%); }
+
+        .diag-1 { 
+            top: 15px;
+            left: 15px;
+            width: 345px;
+            transform: rotate(45deg);
+            transform-origin: 0 0;
+        }
+
+        .diag-2 {
+            top: 15px;
+            left: 259px;
+            width: 345px;
+            transform: rotate(135deg);
+            transform-origin: 0 0;
+        }
+
+        .cell {
+            width: 90px;
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            background-color: var(--tg-theme-secondary-bg-color, #fff);
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+        .cell:hover {
+            background-color: var(--tg-theme-bg-color, #f9f9f9);
+        }
+        .cell.x {
+            color: #eb4d4b;
+        }
+        .cell.o {
+            color: #4834d4;
+        }
+        .cell.winner {
+            background-color: rgba(255, 71, 87, 0.1);
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--tg-theme-text-color, #333);
+            min-height: 1.5em;
+        }
+        button {
+            background-color: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #fff);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+            transition: opacity 0.2s, transform 0.1s;
+            width: 100%;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Крестики-нолики</h1>
+        <div class="game-board" id="gameBoard">
+            <div class="cell" data-cell-index="0"></div>
+            <div class="cell" data-cell-index="1"></div>
+            <div class="cell" data-cell-index="2"></div>
+            <div class="cell" data-cell-index="3"></div>
+            <div class="cell" data-cell-index="4"></div>
+            <div class="cell" data-cell-index="5"></div>
+            <div class="cell" data-cell-index="6"></div>
+            <div class="cell" data-cell-index="7"></div>
+            <div class="cell" data-cell-index="8"></div>
+            <div class="winning-line" id="winningLine"></div>
+        </div>
+        <div class="status" id="gameStatus"></div>
+        <button id="resetButton">Перезапустить игру</button>
+    </div>
+
+    <script>
+        // Безопасная инициализация Telegram WebApp
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        const gameBoard = document.getElementById('gameBoard');
+        const gameStatus = document.getElementById('gameStatus');
+        const resetButton = document.getElementById('resetButton');
+        const winningLine = document.getElementById('winningLine');
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let gameActive = true;
+
+        const winningConditions = [
+            { cells: [0, 1, 2], class: 'row-1' },
+            { cells: [3, 4, 5], class: 'row-2' },
+            { cells: [6, 7, 8], class: 'row-3' },
+            { cells: [0, 3, 6], class: 'col-1' },
+            { cells: [1, 4, 7], class: 'col-2' },
+            { cells: [2, 5, 8], class: 'col-3' },
+            { cells: [0, 4, 8], class: 'diag-1' },
+            { cells: [2, 4, 6], class: 'diag-2' }
+        ];
+
+        function handleCellPlayed(clickedCell, clickedCellIndex) {
+            board[clickedCellIndex] = currentPlayer;
+            clickedCell.innerHTML = currentPlayer;
+            clickedCell.classList.add(currentPlayer.toLowerCase());
+        }
+
+        function handlePlayerChange() {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            gameStatus.innerHTML = `Ход игрока: ${currentPlayer}`;
+        }
+
+        function drawWinningLine(winCondition) {
+            winningLine.className = 'winning-line ' + winCondition.class;
+            winningLine.style.display = 'block';
+            winCondition.cells.forEach(index => {
+                const cell = document.querySelector(`[data-cell-index="${index}"]`);
+                if (cell) cell.classList.add('winner');
+            });
+        }
+
+        function handleResultValidation() {
+            let roundWon = false;
+            let winCondition = null;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const condition = winningConditions[i];
+                const [a, b, c] = condition.cells;
+                if (board[a] !== '' && board[a] === board[b] && board[a] === board[c]) {
+                    roundWon = true;
+                    winCondition = condition;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                gameStatus.innerHTML = `Игрок ${currentPlayer} выиграл!`;
+                gameActive = false;
+                drawWinningLine(winCondition);
+                setTimeout(() => sendGameResult(`win ${currentPlayer}`), 1000);
+                return;
+            }
+
+            if (!board.includes('')) {
+                gameStatus.innerHTML = `Ничья!`;
+                gameActive = false;
+                setTimeout(() => sendGameResult('draw'), 1000);
+                return;
+            }
+
+            handlePlayerChange();
+        }
+
+        function handleCellClick(event) {
+            const clickedCell = event.target.closest('.cell');
+            if (!clickedCell || !gameActive) return;
+            
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
+
+            if (board[clickedCellIndex] !== '') {
+                return;
+            }
+
+            handleCellPlayed(clickedCell, clickedCellIndex);
+            handleResultValidation();
+        }
+
+        function handleResetGame() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            currentPlayer = 'X';
+            gameActive = true;
+            gameStatus.innerHTML = `Ход игрока: ${currentPlayer}`;
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.innerHTML = '';
+                cell.classList.remove('x', 'o', 'winner');
+            });
+            winningLine.style.display = 'none';
+            winningLine.className = 'winning-line';
+        }
+
+        function sendGameResult(result) {
+            if (tg && tg.sendData) {
+                tg.sendData(result);
+            } else {
+                console.log("Результат игры (не в Telegram):", result);
+            }
+        }
+
+        gameBoard.addEventListener('click', handleCellClick);
+        resetButton.addEventListener('click', handleResetGame);
+        gameStatus.innerHTML = `Ход игрока: ${currentPlayer}`;
+    </script>
+</body>
+</html>
